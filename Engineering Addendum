@@ -1,0 +1,41 @@
+Dear User,
+
+This is the page for information about our current senior design project which will be an attachable device for a saxophone which will 
+generate audio effects and visual effects. There is also a controller that has a TFT LCD screen and a couple of knobs and a 4 position 
+switch. The page will focus on the complications that the CyborgSax team had to encounter throughout the duration of the project. 
+This is a guide to whoever is reading this to save time on figuring out what is wrong with certain parts of the project whether 
+it is hardware or software.
+
+The first problem that the team encountered was the selection of the microprocessor. The team had to choose from various microprocessors 
+such as the Raspberry Pi, the Arduino and the NVIDIA TX1. After some research the team realised that the best option was the Teensy 3.6 
+which is an Arduino based microprocessor that is designed for audio processing. It had enough CPU power and had the ability to be fitted
+with a 32 GB SD Card which had the ability to store content such as code and any audio files that we needed to use. If the project was 
+to be redone we would still have went with the Teensy 3.6 again however we probably would have went with 2 Teensys instead of one for more
+processing power. Even though at first it seemed that there was enough processing power the screen could not display the correct values 
+anymore because of everything trying to run at once. There is a slight problem because in order to use multiple Teensys there would need 
+to be a way to get the Teensys to communicate with each other.
+
+Microphone selection can save you time if you decide not to get a microphone with a 3.5mm jack input but an XLR input instead as the
+method of using the 3.5mm headphone jack did not work for the team first time. And even when trying to amplify the signal with an
+operational amplifier that still didn’t work. As a result one of the people in the team decided to go with an XLR audio input for the
+microphone which worked.
+
+Setting up the code for the encoder knob the first time was a hassle as there was one line of code where an INPUT_PULLUP was needed 
+instead of INPUT for the pin modes where a lot of time was wasted trying to figure out what went wrong with the code and why there were
+no values getting outputted properly to the serial monitor. That change of INPUT_PULLUP is needed otherwise there will be no correct 
+values shown to the serial monitor.
+
+Another thing that cost the team time was when the TFT LCD screen was not hooked up properly. We tried to look at sources online to see 
+how to hook up the specific TFT screen but after careful review from the website that sells the screen it showed us how to wire it up 
+properly and that is given from the hardware report on the GitHub. Please follow that table as shown to make the TFT have patterns display 
+to the screen when testing for functionality.
+
+If there is not enough CPU power and one has,for whatever reason,no option but to use only one Teensy. One of the problems that was 
+causing the noise in the speaker was the use of the 1024 point FFT which took up too much processing power on the Teensy. As a result 
+that was fixed by using a 256 point FFT. Also when demoing the final product because there was not enough CPU power the FFT algorithm had
+to be paused when the controller was being used. Basically whenever a setting on the controller was being changed the entire FFT function 
+stops so that the user can change the setting. Once the setting has been changed the user may deselect a function and the FFT algorithm will 
+continue to run.
+
+When it comes to preventing any unstable variations in the output values for the encoder the hardware interrupt must be in the code 
+otherwise there will be back and forth fluctuations in the encoder values.

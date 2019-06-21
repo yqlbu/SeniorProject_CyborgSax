@@ -1,0 +1,65 @@
+#include <Bounce.h>
+
+#define outputA 2
+#define outputB 3
+#define SW 5
+
+int counter;
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
+int aState;
+int aLastState;  
+
+Bounce bouncer_1 = Bounce (outputA , 2); //Initiate a Bounce object with a 5 milisecond debounce time
+
+void setup() { 
+  pinMode (outputA,INPUT_PULLUP);
+  pinMode (outputB,INPUT_PULLUP);
+  // initialize the button pin as a input:
+  pinMode (SW,INPUT_PULLUP);
+ 
+  Serial.begin (9600);
+  // Reads the initial state of the outputA
+  aLastState = digitalRead(outputA);  
+} 
+
+void loop() { 
+   // Update the debouncer
+   bouncer_1.update();
+   
+   aState = digitalRead(outputA); // Reads the "current" state of the outputA
+   buttonState = digitalRead(SW); // read the state of the button
+   counter = constrain(counter, 1, 99); //set the constrain to the volume control
+
+   if (bouncer_1.risingEdge()){
+     // If the previous and the current state of the outputA are different, that means a Pulse has occured
+     if (aState != aLastState){     
+       // If the outputB state is different to the outputA state, that means the encoder is rotating clockwise
+       if (digitalRead(outputB) != aState) { 
+         counter ++;
+       } else {
+         counter --;
+       }
+       Serial.print("Position: ");
+       Serial.println(counter);
+     }
+   }
+   aLastState = aState; // Updates the previous state of the outputA with the current state
+
+   if (buttonState != lastButtonState) {
+      // if the state has changed, increment the counter
+      if (buttonState == HIGH) {
+        // if the current state is HIGH then the button went from off to on:
+        buttonPushCounter = (buttonPushCounter + 1) % 4;
+        Serial.println("button pushed!");
+        Serial.print("mode: ");
+        Serial.println(buttonPushCounter);
+      }
+      // Delay a little bit to avoid bouncing
+      delay(50);
+    }
+    // save the current state as the last state, for next time through the loop
+    lastButtonState = buttonState;
+}

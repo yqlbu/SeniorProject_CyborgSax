@@ -1,0 +1,434 @@
+//This example implements a simple sliding On/Off button. The example
+// demonstrates drawing and touch operations.
+//
+//Thanks to Adafruit forums member Asteroid for the original sketch!
+//
+#include <Adafruit_GFX.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_ILI9341.h>
+#include <Adafruit_STMPE610.h>
+
+#define TFT_DC 9              
+#define TFT_CS 10             
+#define TFT_RST 8             
+#define TFT_MISO 12           
+#define TFT_MOSI 11           
+#define TFT_CLK 13          
+
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+
+#define LINECOLOR1 0xEBD5 // purple
+
+int pattern_choosen = 1;
+
+// set the following parameters for overall coordinates of the GUI layout
+//int global_x = ;
+//int global_y = ;
+
+
+void setup(void)
+{
+    Serial.begin(9600);
+    Serial.println("ILI9341 Test!"); 
+    tft.begin();
+    tft.setRotation(3); //adjust the tft screen for displaying in the right way
+}
+
+void loop()
+{
+    test(ILI9341_GREEN);
+    delay(10000000);
+}
+
+
+// *****************---------- Main ------------**********************
+unsigned long test(uint16_t color) {
+  unsigned long start;
+
+  tft.fillScreen(ILI9341_BLACK);
+  start = micros();
+
+  // ------- drawing the Circles to indicate current mode -------------
+
+    int c_x = 70;
+    int c_y = 118;
+    int r = 25;
+
+    circle(c_x,c_y,r,ILI9341_WHITE);
+    
+    tft.setCursor(c_x-6, c_y-9); //coordination
+    tft.setTextColor(ILI9341_RED);  tft.setTextSize(3);
+    if (pattern_choosen == 1)
+    {
+       tft.println("S");
+    }
+
+// ---------- Volume bar --------------- 
+
+  volume_bar();
+
+// ----------  creating rectangles for modes display ---------------
+
+// defining the parameters for drawing the rectangles
+int rec_1_x = 25; // x-coordinate
+int rec_1_y = 35; // y-coordinate
+int rec_1_w = 90; // width
+int rec_1_h = 30; // hight
+
+int rec_2_x = 25; // x-coordinate
+int rec_2_y = 170; // y-coordinate
+int rec_2_w = 90; // width
+int rec_2_h = 30; // hight
+
+// mode_1
+    rectangle(rec_1_x,rec_1_y,rec_1_w,rec_1_h,ILI9341_WHITE);
+    tft.setCursor(rec_1_x+35, rec_1_y+8); //coordination --> y = 43
+    tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(2);
+    tft.println("F1");
+    
+// mode_2
+    rectangle(rec_2_x,rec_2_y,rec_2_w,rec_2_h,ILI9341_WHITE);
+    tft.setCursor(rec_2_x+35, rec_2_y+8); //coordination
+    tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(2);
+    tft.println("F2");
+
+// ---------- drawing the lines to connect the chosen mode to mode options (WHITE)------------
+
+    connected_lines();
+
+
+// ------- drawing the taget line (RED)-------------
+
+    chosen_lines();
+
+// ------- drawing the encoder (WHITE) -------------
+
+    encoder();
+
+// ------- drawing the selected_encoder (RED) -------------
+
+    set_encoder();
+
+// ---------- drawing the mode selection with square ------------
+
+// defining the parameters for drawing the square to indicate the current mode
+//    int a1 = 20;
+//    int a2 = 90;
+//    int a3 = 60;
+//    int a4 = 60;  
+//    
+//    square(a1,a2,a3,a4,ILI9341_YELLOW);
+//    tft.setCursor(a1+24, a2+22); //coordination
+//    tft.setTextColor(ILI9341_RED);  tft.setTextSize(3);
+//    if (pattern_choosen == 1)
+//    {
+//       tft.println("S");
+//    }
+}
+
+// the function to draw rectangles
+unsigned long rectangle(int x,int y,int w,int h,uint16_t color)
+{
+  unsigned long start = micros();
+  start = micros();
+  
+  for (int i=0; i<3; i++)
+  {
+    tft.drawRect(x,y,w,h,color)  ;
+    x++;
+    y++;
+    w=w-2;
+    h=h-2;
+  }
+  return micros() - start;
+}
+
+// the function to draw a square
+unsigned long square(int x, int y, int w, int h, uint16_t color)
+{
+    unsigned long start = micros();
+    start = micros();
+    
+    for (int i=0; i<4; i++)
+    {
+        tft.drawRect(x,y,w,h,color);
+        x++;
+        y++;
+        w=w-2;
+        h=h-2;
+    }
+    
+    return micros() - start;
+}
+
+unsigned long circle(int x, int y, int r, uint16_t color)
+{
+// center Pixel's horizontal position
+// center Pixel's vertical position
+// Circle Radius
+// Line color
+
+    unsigned long start = micros();
+    start = micros();
+
+    tft.fillCircle(x,y,r,color);
+    
+    return micros() - start;
+}
+
+// the function to draw lines
+unsigned long lines(int x1, int y1, int x2, int y2, uint16_t color)
+{
+    unsigned long start = micros();
+    start = micros();
+    
+// argument_1: start Pixel's horizontal position
+// argument_2: start Pixel's vertical position
+// the first two arguments is the initial coordination of the line
+// argument_3: end Pixel's horizontal position
+// argument_4: end Pixel's horizontal position
+
+    for (int i=0; i<30;i++){
+      tft.drawLine(x1,y1,x2,y2,color);
+    }
+
+    return micros() - start;
+}
+
+void connected_lines()
+{
+  // defining the parameters for drawing lines
+  int l1_x1 = 70;
+  int l1_y1 = 92;
+  int l1_x2 = 70;
+  int l1_y2 = 65; 
+
+  int l2_x1 = 70;
+  int l2_y1 = 144;
+  int l2_x2 = 70;
+  int l2_y2 = 169; 
+    
+// vertical lines
+    // connected to mode 1
+    lines(l1_x1,l1_y1,l1_x2,l1_y2,ILI9341_WHITE);
+    lines(l1_x1+1,l1_y1,l1_x2+1,l1_y2,ILI9341_WHITE);
+    lines(l1_x1-1,l1_y1,l1_x2-1,l1_y2,ILI9341_WHITE);
+
+    // connected to mode 2
+    lines(l2_x1,l2_y1,l1_x2,l2_y2,ILI9341_WHITE);
+    lines(l2_x1+1,l2_y1,l1_x2+1,l2_y2,ILI9341_WHITE);
+    lines(l2_x1-1,l2_y1,l1_x2-1,l2_y2,ILI9341_WHITE);
+
+}
+
+void volume_bar()
+{
+// argument_1: start Pixel's horizontal position
+// argument_2: start Pixel's vertical position
+// the first two arguments is the initial coordination of the rectangle
+// argument_3: Rectangle width
+// argument_4: Rectangle Height
+// #s goes down -> increase (coordination)
+
+    int b1_x=175, b1_y=190, w=50, h=10;
+    int b2_x=245;
+    
+// ********** bar #1 *********** //
+
+// contour of the bar
+    tft.drawRect(b1_x-3,b1_y-64,w+6,h+68, LINECOLOR1);
+    
+// bottom bar 20%
+    tft.drawRect(b1_x,b1_y,w, h, LINECOLOR1);
+    tft.drawRect(b1_x+1,b1_y+1,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b1_x+2,b1_y+2,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b1_x+3,b1_y+3,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b1_x+4,b1_y+4,w-8, h-8, LINECOLOR1);
+// bottom bar 40%
+    tft.drawRect(b1_x,b1_y-15,w, h, LINECOLOR1);
+    tft.drawRect(b1_x+1,b1_y-14,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b1_x+2,b1_y-13,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b1_x+3,b1_y-12,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b1_x+4,b1_y-11,w-8, h-8, LINECOLOR1);
+// bottom bar 60%
+    tft.drawRect(b1_x,b1_y-30,w, h, LINECOLOR1);
+    tft.drawRect(b1_x+1,b1_y-29,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b1_x+2,b1_y-28,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b1_x+3,b1_y-27,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b1_x+4,b1_y-26,w-8, h-8, LINECOLOR1);
+// bottom bar 80%
+    tft.drawRect(b1_x,b1_y-45,w, h, LINECOLOR1);
+    tft.drawRect(b1_x+1,b1_y-44,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b1_x+2,b1_y-43,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b1_x+3,b1_y-42,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b1_x+4,b1_y-41,w-8, h-8, LINECOLOR1);
+// bottom bar 100% --> the very top bar
+    tft.drawRect(b1_x,b1_y-60,w, h, LINECOLOR1);
+    tft.drawRect(b1_x+1,b1_y-59,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b1_x+2,b1_y-58,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b1_x+3,b1_y-57,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b1_x+4,b1_y-56,w-8, h-8, LINECOLOR1);
+
+    int text1_x = b1_x, text_y = b1_y-84;
+// putting text to indicate the % of master volume
+    tft.setCursor(text1_x, text_y); //coordination
+    tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(2);
+    tft.println("100%");
+
+// ********** bar #2 *********** //
+
+// contour of the bar
+    tft.drawRect(b2_x-3,b1_y-64,w+6,h+68, LINECOLOR1);
+    
+// bottom bar 20%
+    tft.drawRect(b2_x,b1_y,w, h, LINECOLOR1);
+    tft.drawRect(b2_x+1,b1_y+1,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b2_x+2,b1_y+2,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b2_x+3,b1_y+3,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b2_x+4,b1_y+4,w-8, h-8, LINECOLOR1);
+// bottom bar 40%
+    tft.drawRect(b2_x,b1_y-15,w, h, LINECOLOR1);
+    tft.drawRect(b2_x+1,b1_y-14,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b2_x+2,b1_y-13,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b2_x+3,b1_y-12,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b2_x+4,b1_y-11,w-8, h-8, LINECOLOR1);
+// bottom bar 60%
+    tft.drawRect(b2_x,b1_y-30,w, h, LINECOLOR1);
+    tft.drawRect(b2_x+1,b1_y-29,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b2_x+2,b1_y-28,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b2_x+3,b1_y-27,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b2_x+4,b1_y-26,w-8, h-8, LINECOLOR1);
+// bottom bar 80%
+    tft.drawRect(b2_x,b1_y-45,w, h, LINECOLOR1);
+    tft.drawRect(b2_x+1,b1_y-44,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b2_x+2,b1_y-43,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b2_x+3,b1_y-42,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b2_x+4,b1_y-41,w-8, h-8, LINECOLOR1);
+// bottom bar 100% --> the very top bar
+    tft.drawRect(b2_x,b1_y-60,w, h, LINECOLOR1);
+    tft.drawRect(b2_x+1,b1_y-59,w-2, h-2, LINECOLOR1);
+    tft.drawRect(b2_x+2,b1_y-58,w-4, h-4, LINECOLOR1);
+    tft.drawRect(b2_x+3,b1_y-57,w-6, h-6, LINECOLOR1);
+    tft.drawRect(b2_x+4,b1_y-56,w-8, h-8, LINECOLOR1);
+
+    int text2_x = b2_x;
+// putting text to indicate the % of master volume
+    tft.setCursor(text2_x, text_y); //coordination
+    tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(2);
+    tft.println("100%");
+    
+}
+
+void encoder()
+{
+  
+// ********** Encoder #1 *********** //
+
+    int c1_x = 197;
+    int c_y = 58;
+    int r = 20;
+
+    circle(c1_x,c_y,r,ILI9341_WHITE);
+    
+    tft.setCursor(c1_x-8, c_y-7); //coordination
+    tft.setTextColor(ILI9341_RED);  tft.setTextSize(2);
+    if (pattern_choosen == 1)
+    {
+       tft.println("E1");
+    }
+
+// ********** Encoder #2 *********** //
+
+    int c2_x = 270;
+
+    circle(c2_x,c_y,r,ILI9341_WHITE);
+    
+    tft.setCursor(c2_x-9, c_y-7); //coordination
+    tft.setTextColor(ILI9341_RED);  tft.setTextSize(2);
+    if (pattern_choosen == 1)
+    {
+       tft.println("E2");
+    }
+
+}
+
+
+void chosen_lines()
+{
+    // defining the parameters for drawing lines
+
+    int rec_1_x = 25; // x-coordinate
+    int rec_1_y = 35; // y-coordinate
+    int rec_1_w = 90; // width
+    int rec_1_h = 30; // hight
+    
+    int rec_2_x = 25; // x-coordinate
+    int rec_2_y = 170; // y-coordinate
+    int rec_2_w = 90; // width
+    int rec_2_h = 30; // hight
+
+    int l1_x1 = 70;
+    int l1_y1 = 92;
+    int l1_x2 = 70;
+    int l1_y2 = 65; 
+
+// rectangles and text
+    if (pattern_choosen == 1)
+    {
+      // mode_1
+        rectangle(rec_1_x,rec_1_y,rec_1_w,rec_1_h,ILI9341_RED);
+        tft.setCursor(rec_1_x+35, rec_1_y+8); //coordination --> y = 43
+        tft.setTextColor(ILI9341_RED);  tft.setTextSize(2);
+        tft.println("F1");
+
+      // connected to mode 1
+        lines(l1_x1,l1_y1,l1_x2,l1_y2,ILI9341_RED);
+        lines(l1_x1+1,l1_y1,l1_x2+1,l1_y2,ILI9341_RED);
+        lines(l1_x1-1,l1_y1,l1_x2-1,l1_y2,ILI9341_RED);
+        
+
+    }
+    else if (pattern_choosen == 2)
+    {
+      // mode_2
+        rectangle(rec_2_x,rec_2_y,rec_2_w,rec_2_h,ILI9341_RED);
+        tft.setCursor(rec_2_x+35, rec_2_y+8); //coordination
+        tft.setTextColor(ILI9341_RED);  tft.setTextSize(2);
+        tft.println("F2");
+    }
+}
+
+void set_encoder()
+{
+    int c1_x = 197;
+    int c_y = 58;
+    int r = 20;
+    int c2_x = 270;
+
+    if (pattern_choosen == 1)
+    {
+  
+      circle(c1_x,c_y,r,ILI9341_RED);
+      
+      tft.setCursor(c1_x-8, c_y-7); //coordination
+      tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(2);
+      if (pattern_choosen == 1)
+      {
+         tft.println("E1");
+      }
+    }
+    
+    if (pattern_choosen == 2)
+    {
+
+      circle(c2_x,c_y,r,ILI9341_WHITE);
+      
+      tft.setCursor(c2_x-9, c_y-7); //coordination
+      tft.setTextColor(ILI9341_RED);  tft.setTextSize(2);
+      if (pattern_choosen == 1)
+      {
+         tft.println("E2");
+      }
+    }
+}
